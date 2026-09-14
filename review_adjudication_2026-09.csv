@@ -1,0 +1,57 @@
+species,trait,current_value,verdict,failure_class,expected_value,reviewer_note
+Folsomia candida,trophic_guild,predator|fungivore,reject,prey_of,fungivore,reviewers objected to the predator label only; fungal feeding is directly stated in the sources
+Folsomia fimetaria,trophic_guild,omnivore|detritivore|fungivore|bacterivore|predator,revise,wrong_label|experimental,microbivore,"28310911: 'unspecialized microbial feeder'; lab/microcosm, authors urge caution"
+Folsomia fimetarioides,trophic_guild,fungivore,keep_with_note,experimental,fungivore,fungal preference shown under experimental conditions
+Folsomia spinosa,trophic_guild,detritivore,reject,substrate_inference,,found in Pinus debris; source states no feeding info available
+Friesea mirabilis,trophic_guild,detritivore,reject,substrate_inference,,"source gives habitat only (soil, litter, moss, rotted wood)"
+Heteromurus nitidus,trophic_guild,fungivore|herbivore|omnivore,keep_fix_note,note_unsupported,fungivore,label correct; our note asserts animal/omnivorous feeding the sources do not support
+Hypogastrura assimilis,trophic_guild,omnivore|fungivore|bacterivore|detritivore,revise,general_collembola|experimental,fungivore,note admits no direct info then infers from Collembola generally; brewer's yeast is an experimental diet
+Hypogastrura viatica,trophic_guild,omnivore|algivore|bacterivore|detritivore,keep_with_note,experimental,bacterivore,experimentally fed cyanobacteria-crusted bark
+Isotoma anglicana,trophic_guild,omnivore|predator|bacterivore|detritivore,reject,prey_of,,PMID 14629361 reports it as prey of spiders
+Isotoma caerulea,trophic_guild,bacterivore,reject,wrong_label,,algae/plant/microbial use documented; no direct evidence of bacterial consumption
+Isotoma riparia,trophic_guild,predator,reject,prey_of,,"species is the prey, not the predator"
+Isotomurus balteatus,trophic_guild,detritivore,reject,substrate_inference,,"presence in forest leaf litter is habitat, not diet"
+Isotomurus maculatus,trophic_guild,bacterivore,reject,wrong_label,,as Isotoma caerulea: bacterivory not supported
+Lepidocyrtus cyaneus,trophic_guild,predator,reject,prey_of,,"species is the prey, not the predator"
+Neanura moldavica,trophic_guild,fungivore,reject,no_evidence,,no fungivory information in the papers
+Neanura muscorum,trophic_guild,fungivore,revise,experimental,fungivore|algivore,experimentally fed Physarum polycephalum and algae-covered bark
+Orchesella villosa,trophic_guild,bacterivore,reject,wrong_label,,as Isotoma caerulea: bacterivory not supported
+Protaphorura fimata,trophic_guild,fungivore|herbivore,revise,experimental,herbivore|fungivore,fungal consumption experimental; lettuce supported by experiment and field
+Protaphorura subarmata,trophic_guild,detritivore,reject,substrate_inference,,decomposed plant material and cheese bait do not demonstrate detritivory
+Sminthurinus elegans,trophic_guild,herbivore|detritivore,reject,substrate_inference,,occurrence in soil and litter is not evidence of herbivory
+Sminthurinus niger,trophic_guild,detritivore,reject,general_collembola,,fungal/decomposed-plant feeding refers to Collembola in general
+Tomocerina minuta,trophic_guild,detritivore,reject,substrate_inference,,occurrence in soil and litter is habitat only
+Vertagopus glacialis,trophic_guild,omnivore|algivore|predator|bacterivore,revise,general_collembola|wrong_label,herbivore|detritivore,"isotopic evidence for ice-dwelling springtails generally, not species-specific"
+Vertagopus pseudocinereus,trophic_guild,fungivore,keep_with_note,experimental,fungivore,yeast feeding trials
+Willemia denisi,trophic_guild,detritivore,reject,substrate_inference,,soil and litter under pine is habitat only
+Willemia scandinavica,trophic_guild,detritivore,reject,substrate_inference,,soil and litter is habitat only
+Xenylla mediterranea,trophic_guild,herbivore,reject,substrate_inference,,source covers habitat and substrate only
+Deutonura gibbosa,body_size,1.3-1.4,reject,congeneric,,value belongs to Deutonura zana
+Entomobrya handschini,body_size,1.3-2.1,reject,congeneric,,value belongs to Entomobrya maroccana
+Entomobrya marginata,body_size,2.06,reject,congeneric,,value belongs to Entomobrya boneti
+Folsomia bisetosa,body_size,0.7-0.9,reject,congeneric,,value belongs to Folsomia mofettophila
+Folsomia sensibilis,body_size,1.75,reject,congeneric,,value belongs to Folsomia minorae
+Friesea truncata,body_size,1-1.2,reject,congeneric,0.73-0.76,value belongs to Friesea major; correct value for the target species is present in the same Plazi treatment
+Mesogastrura libyca,body_size,1,reject,congeneric,,value belongs to Mesogastrura seotalensis
+Micranurida pygmaea,body_size,0.3-0.42,reject,congeneric,,value belongs to Micranurida hunanensis
+Onychiurus ambulans,body_size,1.4-1.8,reject,congeneric,,value belongs to Onychiurus heilongjiangensis
+Protaphorura janosik,body_size,3,reject,congeneric,,value belongs to Protaphorura borinensis
+Pseudosinella decipiens,body_size,1.25-1.5,reject,congeneric,,value belongs to Pseudosinella jacetanica
+Stenaphorura quadrispina,body_size,1.33,reject,congeneric,,value belongs to Stenaphorura lubbocki
+Supraphorura furcifera,body_size,1.8,reject,congeneric,,value belongs to Supraphorura chernovae
+Neelus koseli,body_size,0.3-0.32,revise,wrong_measurement,0.9-1.0,head length captured; body length 0.9-1.0 mm present in the same Plazi treatment
+Folsomia fimetaria,body_size,,add,recall_miss,0.8-1.4,"present in PMID 28310911, a document already used for this species' trophic guild"
+Entomobrya unostrigata,body_size,,add,recall_miss,3.91,present in Plazi BF8EAF45DE025E92A6EBEE16636CD03
+Anurida granulata,habitat,soil|alpine_glacier,revise,geography_inference,soil,only ecological statement is 'sol acide'; alpine_glacier inferred from Savoy at 950-2150 m
+Anurida tullbergi,habitat,freshwater,reject,flooding_inference,,terrestrial species of Eder Reservoir floodplains surviving inundation at egg stage; not freshwater
+Bilobella aurantiaca,habitat,marine_coastal,revise,geography_inference,forest_wood|moss_lichen,found in decaying wood and moss; no marine or coastal reference
+Bilobella braunerae,habitat,leaf_litter|soil,reject,wrong_species,,source concerns B. aurantiaca; braunerae only a doubtful record judged an aberrant aurantiaca
+Desoria fennica,habitat,alpine_glacier|cave|freshwater,reject,no_ecological_info,,distribution and collection localities only
+Deutonura caerulescens,habitat,marine_coastal,reject,no_ecological_info,,distribution and DNA barcoding only
+Deutonura gibbosa,habitat,alpine_glacier,reject,geography_inference,,alpine_glacier inferred from reported localities
+Deutonura provincialis,habitat,soil|cave|marine_coastal,revise,geography_inference,forest_wood|leaf_litter,holm oak and cork oak forest soil litter; no cave or marine-coastal reference
+Deutonura stachi,habitat,forest_wood|grassland,reject,no_ecological_info,,"collection localities, dates and specimen counts only"
+Folsomia fimetaria,habitat,soil|agricultural|sandy_dune,revise,experimental_substrate,soil,soil supported; agricultural derives from an experiment run in sandy agricultural soil
+Hemisotoma thermophila,habitat,grassland|freshwater|soil|marine_coastal,revise,geography_inference,grassland|soil,"eurytopic; grassland and soil supported, freshwater and marine_coastal not; salt-land pasture is terrestrial saline"
+Lathriopyga longiseta,habitat,marine_coastal,reject,geography_inference,,Corsican localities and cytology only; no marine or coastal reference
+Parisotoma agrelli,habitat,marine_coastal,reject,geography_inference,,single locality (Roscoff); a coastal town is not a habitat description
