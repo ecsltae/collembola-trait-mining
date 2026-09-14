@@ -2,8 +2,8 @@
 
 Species-level functional-trait annotations for **330 Collembola species** (from a BOLD COI
 barcode dataset), mined from the published literature with the [SIBiLS](https://sibils.org)
-question-answering service. Three traits are covered — **trophic guild, body size and
-habitat** — and every value is traceable to the source documents it came from. NCBI
+question-answering service. Three traits are covered, **trophic guild, body size and
+habitat**, and every value is traceable to the source documents it came from. NCBI
 Taxonomy IDs are included so the taxonomic path of each taxon can be verified.
 
 **Version 3** (September 2026) follows a detailed review by Matteo Montagna and Paola
@@ -38,7 +38,7 @@ established trait.
 
 ## Data
 
-[`collembola_species_traits_v3.csv`](collembola_species_traits_v3.csv) — one row per
+[`collembola_species_traits_v3.csv`](collembola_species_traits_v3.csv), one row per
 species (330 rows). The v2 file is kept as `collembola_species_traits_v2.csv` for
 comparison.
 
@@ -59,7 +59,7 @@ Each of the three traits carries the same six columns.
 | `trophic_guild` / `body_size_mm` / `habitat` | **The value.** Explicit, species-specific evidence only. |
 | `*_indirect` | Values that did not meet that standard, kept with their reason |
 | `*_evidence_type` | `direct` (observation or field study) or `experimental` (laboratory feeding trial) |
-| `*_note` | Why a value was demoted, or what qualifies it — e.g. "body size of the target species not available; the value reported in the source is for *Friesea major*" |
+| `*_note` | Why a value was demoted, or what qualifies it, e.g. "body size of the target species not available; the value reported in the source is for *Friesea major*" |
 | `*_n_docs` | Species-specific documents behind the answer (0 = no species-specific evidence) |
 | `*_sources`, `*_qa_answer` | Source document IDs (PMID / PMCID / Plazi) and the grounded QA answer |
 
@@ -111,8 +111,8 @@ The review was encoded as 56 adjudicated species-trait pairs and used as a test 
 
 The gap between the two is informative. Removing a wrong value is something extraction can
 do on its own. Recovering the *right* value often cannot be done from a cached answer,
-because the answer summarises the document rather than reproducing it — the reviewers were
-reading full sources. Those cases need the question re-asked against the source text, which
+because the answer summarises the document rather than reproducing it, whereas the
+reviewers were reading the full sources. Those cases need the question re-asked against the source text, which
 is the next step rather than a limitation of the approach.
 
 ## Method
