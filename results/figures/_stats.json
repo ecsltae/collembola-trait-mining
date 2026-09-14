@@ -1,0 +1,43 @@
+{
+  "n_genera": 102,
+  "answered": 95,
+  "with_feed": 38,
+  "assigned": 40,
+  "unknown": 62,
+  "total_docs": 266,
+  "total_feed": 85,
+  "prim": {
+    "unknown": 62,
+    "omnivore": 12,
+    "predator": 15,
+    "detritivore": 6,
+    "fungivore": 5,
+    "herbivore": 1,
+    "bacterivore": 1
+  },
+  "allg": {
+    "omnivore": 14,
+    "algivore": 7,
+    "bacterivore": 9,
+    "herbivore": 5,
+    "predator": 29,
+    "detritivore": 19,
+    "fungivore": 16
+  },
+  "col": {
+    "pmc": 28,
+    "medline": 35,
+    "plazi": 32
+  },
+  "n_specimens": 16029,
+  "sp_assigned": 5121,
+  "sp_prim": {
+    "unknown": 10908,
+    "omnivore": 1097,
+    "predator": 2792,
+    "detritivore": 75,
+    "fungivore": 349,
+    "herbivore": 805,
+    "bacterivore": 3
+  }
+}

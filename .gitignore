@@ -1,0 +1,15 @@
+# Source dataset comes from BOLD and is not ours to redistribute
+data/
+
+# Partner correspondence and review documents in their original form
+feedback/
+
+# Unsent drafts and internal notes
+private/
+
+# Per-species run state, regenerable from the pipeline
+results/checkpoints_*/
+
+# Python bytecode
+__pycache__/
+*.pyc

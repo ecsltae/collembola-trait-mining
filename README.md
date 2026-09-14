@@ -115,6 +115,20 @@ because the answer summarises the document rather than reproducing it, whereas t
 reviewers were reading the full sources. Those cases need the question re-asked against the source text, which
 is the next step rather than a limitation of the approach.
 
+## Reproducing
+
+```bash
+scripts/collembola_species_traits.py    # full run: retrieval + QA + extraction (needs SIBiLS API)
+scripts/rebuild_traits_v3.py            # re-extract from cached answers, no API calls
+scripts/score_against_review.py         # score the output against the partner review
+```
+
+`rebuild_traits_v3.py` reads the per-species QA answers cached under
+`results/checkpoints_species_v2/` and applies `scripts/trait_extraction_v3.py`, so the
+extraction rules can be changed and re-scored without re-querying anything. Checkpoints and
+the BOLD source file are not in the repository; the BOLD dataset belongs to BOLD, and the
+checkpoints regenerate from a full run.
+
 ## Method
 
 ![Pipeline](pipeline.png)
