@@ -42,9 +42,9 @@ ax.set_yticks(list(y)); ax.set_yticklabels(traits, fontsize=12, color=INK)
 ax.invert_yaxis()
 ax.set_xlim(0, 258); ax.set_xlabel("species with a value  (of 330)", fontsize=11, color=SEC)
 style(ax)
-ax.set_title("Expert review removed most values; none were thrown away",
+ax.set_title("What changed: verified counts, not just more data",
              fontsize=15, color=INK, weight="bold", loc="left", pad=36)
-ax.text(0, 1.04, "Before and after claim-level extraction",
+ax.text(0, 1.04, "Rejected values are kept beside the verified ones, with the reason recorded",
         transform=ax.transAxes, fontsize=11.5, color=SEC)
 ax.legend(handles=[Patch(color=NEUTRAL, label="Before review"),
                    Patch(color=EXPLICIT, label="Explicit, species-specific evidence"),
