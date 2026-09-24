@@ -1,5 +1,5 @@
 species,trait,current_value,verdict,failure_class,expected_value,reviewer_note
-Folsomia candida,trophic_guild,predator|fungivore,reject,prey_of,fungivore,reviewers objected to the predator label only; fungal feeding is directly stated in the sources
+Folsomia candida,trophic_guild,predator|fungivore,revise,prey_of,fungivore,reviewers objected to the predator label only; fungal feeding is directly stated in the sources
 Folsomia fimetaria,trophic_guild,omnivore|detritivore|fungivore|bacterivore|predator,revise,wrong_label|experimental,microbivore,"28310911: 'unspecialized microbial feeder'; lab/microcosm, authors urge caution"
 Folsomia fimetarioides,trophic_guild,fungivore,keep_with_note,experimental,fungivore,fungal preference shown under experimental conditions
 Folsomia spinosa,trophic_guild,detritivore,reject,substrate_inference,,found in Pinus debris; source states no feeding info available
@@ -31,7 +31,7 @@ Entomobrya handschini,body_size,1.3-2.1,reject,congeneric,,value belongs to Ento
 Entomobrya marginata,body_size,2.06,reject,congeneric,,value belongs to Entomobrya boneti
 Folsomia bisetosa,body_size,0.7-0.9,reject,congeneric,,value belongs to Folsomia mofettophila
 Folsomia sensibilis,body_size,1.75,reject,congeneric,,value belongs to Folsomia minorae
-Friesea truncata,body_size,1-1.2,reject,congeneric,0.73-0.76,value belongs to Friesea major; correct value for the target species is present in the same Plazi treatment
+Friesea truncata,body_size,1-1.2,revise,congeneric,0.73-0.76,value belongs to Friesea major; correct value for the target species is present in the same Plazi treatment
 Mesogastrura libyca,body_size,1,reject,congeneric,,value belongs to Mesogastrura seotalensis
 Micranurida pygmaea,body_size,0.3-0.42,reject,congeneric,,value belongs to Micranurida hunanensis
 Onychiurus ambulans,body_size,1.4-1.8,reject,congeneric,,value belongs to Onychiurus heilongjiangensis
