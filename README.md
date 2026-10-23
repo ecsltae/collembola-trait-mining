@@ -6,13 +6,40 @@ question-answering service. Three traits are covered, **trophic guild, body size
 habitat**, and every value is traceable to the source documents it came from. NCBI
 Taxonomy IDs are included so the taxonomic path of each taxon can be verified.
 
-**Version 3** (September 2026) follows a detailed review by Matteo Montagna and Paola
+**Version 4** (October 2026) follows the same curators' review of v3. Their verdict was
+that the assignments were "greatly improved, especially thanks to the separation between
+direct and indirect information", with one remaining issue: the habitat vocabulary. v4
+replaces the single habitat label with two axes, an EUNIS macrohabitat and a microhabitat,
+and fixes the smaller issues they found.
+
+**Version 3** (September 2026) followed a detailed review by Matteo Montagna and Paola
 Costagliola (University of Naples Federico II), who checked the v2 values against the cited
 sources. Their central finding was that a value can come from the right document and still
 be wrong: a measurement belonging to a congeneric species, a diet inferred from the
 substrate an animal was collected from, a habitat inferred from a collection locality. v3
 addresses this by extracting claims rather than keywords, and by separating what the
 literature states from what it merely suggests.
+
+## What changed in v4
+
+**Habitat is two axes, not one.** v3's `forest_wood` merged a habitat (forest) with a
+substrate (wood), so a species recorded in a forest was labelled wood-associated. The
+reviewers asked for a standard vocabulary and suggested EUNIS. But EUNIS classifies
+*macrohabitats* (forest, grassland, cave, wetland), while springtails are usually described
+by *microhabitat* (leaf litter, dead wood, moss) found inside those. A species in leaf litter
+in a beech forest is EUNIS **G** at one level and `leaf_litter` at the other. With two
+columns the two cannot collapse into one label.
+
+Smaller fixes, each from a specific reviewed case:
+
+- A habitat named only to say a species is rare or absent there is no longer assigned
+  ("very rare in steppes" had produced grassland).
+- Riparian and river-bank habitats no longer imply inland water; they are terrestrial.
+- Dispersion values are no longer parsed as measurements ("1.5 mm with a standard deviation
+  of 0.1 mm" had produced a 0.1–1.5 mm range).
+- "No specific measurement is given" is now recognised as a denial.
+- Body-size notes name the congener a demoted value belongs to, rather than saying only that
+  the target's value is not stated.
 
 ## What changed in v3
 
@@ -38,9 +65,9 @@ established trait.
 
 ## Data
 
-[`collembola_species_traits_v3.csv`](collembola_species_traits_v3.csv), one row per
-species (330 rows). The v2 file is kept as `collembola_species_traits_v2.csv` for
-comparison.
+[`collembola_species_traits_v4.csv`](collembola_species_traits_v4.csv), one row per
+species (330 rows). The v2 and v3 files are kept for comparison; each is reproducible from
+the extraction module of the same version.
 
 ### Identification
 
@@ -56,7 +83,7 @@ Each of the three traits carries the same six columns.
 
 | Column | Description |
 |---|---|
-| `trophic_guild` / `body_size_mm` / `habitat` | **The value.** Explicit, species-specific evidence only. |
+| `trophic_guild` / `body_size_mm` / `habitat_eunis` and `microhabitat` | **The value.** Explicit, species-specific evidence only. |
 | `*_indirect` | Values that did not meet that standard, kept with their reason |
 | `*_evidence_type` | `direct` (observation or field study) or `experimental` (laboratory feeding trial) |
 | `*_note` | Why a value was demoted, or what qualifies it, e.g. "body size of the target species not available; the value reported in the source is for *Friesea major*" |
@@ -64,9 +91,15 @@ Each of the three traits carries the same six columns.
 | `*_sources`, `*_qa_answer` | Source document IDs (PMID / PMCID / Plazi) and the grounded QA answer |
 
 Trophic guilds follow Potapov et al. 2022 (*Soil Biology & Biochemistry*): fungivore,
-bacterivore, microbivore, algivore, herbivore, detritivore, predator, omnivore. Habitat
-classes: soil, leaf_litter, moss_lichen, cave, forest_wood, grassland, freshwater,
-floodplain, marine_coastal, alpine_glacier, agricultural, synanthropic, sandy_dune.
+bacterivore, microbivore, algivore, herbivore, detritivore, predator, omnivore.
+
+**`habitat_eunis`** uses EUNIS level 1, 2012 letter codes: A Marine · B Coastal · C Inland
+surface waters · D Mires, bogs and fens · E Grasslands · F Heathland, scrub and tundra ·
+G Woodland and forest · H Inland unvegetated (caves, ice, scree) · I Cultivated and
+agricultural · J Constructed and artificial.
+
+**`microhabitat`**: soil, leaf_litter, moss_lichen, deadwood, bark, water_surface,
+under_stones, dung_compost.
 
 ### Specimen metadata
 
@@ -86,12 +119,14 @@ compared.
 
 ## Results at a glance
 
-| | v2 | v3 primary | v3 indirect |
-|---|---:|---:|---:|
-| Trophic guild | 40 | **15** | 23 |
-| Body size | 27 | **15** | 11 |
-| Habitat | 221 | **149** | 92 |
-| NCBI taxid resolved | 323 | 323 | |
+| | v2 | v3 | **v4** | v4 indirect |
+|---|---:|---:|---:|---:|
+| Trophic guild | 40 | 15 | **15** | 23 |
+| Body size | 27 | 15 | **14** | 12 |
+| Habitat, EUNIS macrohabitat | | | **106** | 76 |
+| Habitat, microhabitat | | | **106** | 43 |
+| Habitat, either axis | 221 | 149 | **143** | |
+| NCBI taxid resolved | 323 | 323 | 323 | |
 
 The primary counts are lower because the reviewers rejected 68% of v2 trophic guilds and
 56% of v2 body sizes. Fewer values, each one defensible, with the rejected evidence still
@@ -102,12 +137,18 @@ coordinates for all 330, collection year range for 320.
 
 ## Evaluation
 
-The review was encoded as 56 adjudicated species-trait pairs and used as a test set.
+Both reviews are encoded as test sets, and every version is scored against both.
 
-| | |
-|---|---:|
-| Rejected value no longer assigned | **49 / 56 (88%)** |
-| Reviewer's expected value reached | 42 / 56 (75%) |
+| | Round 1 (v2 review, 56 cases) | Round 2 (v3 review, 14 cases) |
+|---|---:|---:|
+| Rejected value no longer assigned | **49 / 56 (88%)** | **12 / 14 (86%)** |
+| Reviewer's expected value reached | 41 / 56 (73%) | 9 / 14 (64%) |
+
+For habitat, the reviewers checked all 128 species with habitat information in the second
+round. v4 introduces no regression on the first round.
+
+[`review_adjudication_2026-09.csv`](review_adjudication_2026-09.csv) ·
+[`review_adjudication_2026-10_v3.csv`](review_adjudication_2026-10_v3.csv)
 
 The gap between the two is informative. Removing a wrong value is something extraction can
 do on its own. Recovering the *right* value often cannot be done from a cached answer,

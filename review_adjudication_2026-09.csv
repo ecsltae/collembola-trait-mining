@@ -44,12 +44,12 @@ Folsomia fimetaria,body_size,,add,recall_miss,0.8-1.4,"present in PMID 28310911,
 Entomobrya unostrigata,body_size,,add,recall_miss,3.91,present in Plazi BF8EAF45DE025E92A6EBEE16636CD03
 Anurida granulata,habitat,soil|alpine_glacier,revise,geography_inference,soil,only ecological statement is 'sol acide'; alpine_glacier inferred from Savoy at 950-2150 m
 Anurida tullbergi,habitat,freshwater,reject,flooding_inference,,terrestrial species of Eder Reservoir floodplains surviving inundation at egg stage; not freshwater
-Bilobella aurantiaca,habitat,marine_coastal,revise,geography_inference,forest_wood|moss_lichen,found in decaying wood and moss; no marine or coastal reference
+Bilobella aurantiaca,habitat,marine_coastal,revise,geography_inference,deadwood|moss_lichen,found in decaying wood and moss; no marine or coastal reference
 Bilobella braunerae,habitat,leaf_litter|soil,reject,wrong_species,,source concerns B. aurantiaca; braunerae only a doubtful record judged an aberrant aurantiaca
 Desoria fennica,habitat,alpine_glacier|cave|freshwater,reject,no_ecological_info,,distribution and collection localities only
 Deutonura caerulescens,habitat,marine_coastal,reject,no_ecological_info,,distribution and DNA barcoding only
 Deutonura gibbosa,habitat,alpine_glacier,reject,geography_inference,,alpine_glacier inferred from reported localities
-Deutonura provincialis,habitat,soil|cave|marine_coastal,revise,geography_inference,forest_wood|leaf_litter,holm oak and cork oak forest soil litter; no cave or marine-coastal reference
+Deutonura provincialis,habitat,soil|cave|marine_coastal,revise,geography_inference,forest|leaf_litter,holm oak and cork oak forest soil litter; no cave or marine-coastal reference
 Deutonura stachi,habitat,forest_wood|grassland,reject,no_ecological_info,,"collection localities, dates and specimen counts only"
 Folsomia fimetaria,habitat,soil|agricultural|sandy_dune,revise,experimental_substrate,soil,soil supported; agricultural derives from an experiment run in sandy agricultural soil
 Hemisotoma thermophila,habitat,grassland|freshwater|soil|marine_coastal,revise,geography_inference,grassland|soil,"eurytopic; grassland and soil supported, freshwater and marine_coastal not; salt-land pasture is terrestrial saline"

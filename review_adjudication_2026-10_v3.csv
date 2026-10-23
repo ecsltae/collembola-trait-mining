@@ -1,0 +1,15 @@
+species,trait,current_value,verdict,failure_class,expected_value,reviewer_note
+Monobella grassei,habitat,forest_wood,reject,geography_inference,,source lists geographic localities only; no forest habitat or wood substrate
+Folsomia palaearctica,habitat,forest_wood|grassland,revise,geography_inference|negated_habitat,forest,"alpine sites are not grassland; 'very rare in steppes' argues against steppe, not for it"
+Deutonura monticola,habitat,forest_wood,revise,forest_wood_conflation,forest,presence in forest does not indicate association with wood substrates
+Stenaphorura quadrispina,habitat,,revise,forest_wood_conflation,forest|agricultural,presence in forest does not indicate association with wood substrates
+Stenaphorura denisi,habitat,,revise,forest_wood_conflation,forest,presence in forest does not indicate association with wood substrates
+Pseudisotoma monochaeta,habitat,forest_wood|soil,revise,forest_wood_conflation,forest|soil,presence in forest does not indicate association with wood substrates
+Folsomia spinosa,habitat,forest_wood,revise,forest_wood_conflation,forest,presence in forest does not indicate association with wood substrates
+Neanura moldavica,habitat,freshwater,revise,explicit_info_missed,woodland,woodland explicitly reported in the MEDLINE source; freshwater assigned instead
+Megalothorax hipmani,habitat,cave,revise,explicit_info_missed,cave|freshwater,'mostly on surface of water pools' supports freshwater
+Vertagopus glacialis,trophic_guild,algivore|bacterivore|microbivore,revise,general_collembola,herbivore|detritivore,isotopic classification of ice-dwelling springtails generally; not species-specific
+Desoria calderonis,body_size,0.1-1.5,revise,sd_parsed_as_range,1.5,1.5 mm with SD 0.1 mm; assignment reports 0.1-1.5
+Ceratophysella denticulata,body_size,1-2,reject,general_collembola,,"'Collembola are small, often less than 1-2 mm' refers to Collembola in general"
+Stenaphorura quadrispina,body_size,,note_only,congeneric_note,,value is for S. lubbocki; should be stated in the body size note
+Entomobrya handschini,body_size,,note_only,congeneric_note,,value is for E. maroccana; should be stated in the body size note
