@@ -8,9 +8,9 @@ returned the crab infraorder Brachyura, and the resolver recorded each as an exa
 match. Bachir Balech found ten such cases in October 2026.
 
 Every candidate is now fetched and checked: its scientific name must equal the name asked
-for, and its lineage must contain Collembola. A species that fails falls back to its genus
-under the same two checks. Anything still unverified is left unresolved rather than filled
-with a wrong organism.
+for, and its lineage must contain Collembola. A species that fails falls back to its genus,
+then to its family as recorded in BOLD, each under the same two checks. Anything still
+unverified gets "N/A" rather than a wrong organism.
 
 The output also carries the NCBI family, compared against the family recorded in BOLD, so
 taxa whose placement differs between the two backbones are flagged rather than silently
@@ -85,10 +85,12 @@ def main() -> None:
     cache_path = Path(args.cache)
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
 
-    # 1. exact-name searches, species then genus
+    # 1. exact-name searches: species, genus, then the family recorded in BOLD
     for r in species:
         sp, genus = r["species"], r["species"].split()[0]
-        for q in (sp, genus):
+        for q in (sp, genus, bold_family.get(sp, "")):
+            if not q:
+                continue
             if q not in cache:
                 try:
                     cache[q] = esearch_exact(q)
@@ -105,19 +107,23 @@ def main() -> None:
     for r in species:
         sp, genus = r["species"], r["species"].split()[0]
         tid, rank, status = "", "", "unresolved"
+        fam = bold_family.get(sp, "")
         sp_ok = [t for t in (cache.get(sp) or []) if verified(t, sp, info)]
         g_ok = [t for t in (cache.get(genus) or []) if verified(t, genus, info)]
+        f_ok = [t for t in (cache.get(fam) or []) if fam and verified(t, fam, info)]
         if sp_ok:
             tid, rank, status = sp_ok[0], "species", "species"
         elif g_ok:
             tid, rank, status = g_ok[0], "genus", "genus_fallback"
+        elif f_ok:
+            tid, rank, status = f_ok[0], "family", "family_fallback"
         ncbi_fam = info.get(tid, {}).get("family", "") if tid else ""
         bfam = bold_family.get(sp, "")
         conflict = bool(ncbi_fam and bfam and ncbi_fam.lower() != bfam.lower())
         rows.append({
             "species": sp,
-            "ncbi_taxid": tid,
-            "taxid_matched_rank": rank,
+            "ncbi_taxid": tid or "N/A",
+            "taxid_matched_rank": rank or "N/A",
             "taxid_status": status,
             "ncbi_scientific_name": info.get(tid, {}).get("name", "") if tid else "",
             "ncbi_family": ncbi_fam,
@@ -135,10 +141,11 @@ def main() -> None:
 
     from collections import Counter
     st = Counter(x["taxid_status"] for x in rows)
-    changed = [x for x in rows if x["ncbi_taxid"] != x["previous_taxid"]]
+    changed = [x for x in rows if x["ncbi_taxid"] not in (x["previous_taxid"], "N/A")]
     print(f"{len(rows)} species -> {args.output}")
     print(f"  species-level, verified : {st['species']}")
     print(f"  genus fallback, verified: {st['genus_fallback']}")
+    print(f"  family fallback, verified: {st['family_fallback']}")
     print(f"  unresolved              : {st['unresolved']}")
     print(f"  taxid changed vs before : {len(changed)}")
     print(f"  BOLD/NCBI family conflict: {sum(1 for x in rows if x['family_conflict_bold_ncbi'])}")

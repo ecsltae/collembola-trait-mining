@@ -75,8 +75,8 @@ the extraction module of the same version.
 |---|---|
 | `species`, `genus`, `family` | Taxonomy as recorded in BOLD |
 | `ncbi_taxid` | NCBI Taxonomy ID |
-| `taxid_matched_rank` | `species` = exact match · `genus` = species absent from NCBI, genus ID used · empty = unresolved |
-| `taxid_status` | `species`, `genus_fallback` or `unresolved`. Every match is verified: NCBI must return the same name, within Collembola |
+| `taxid_matched_rank` | Lowest rank at which the taxon is found in NCBI: `species`, `genus`, or `family` |
+| `taxid_status` | `species`, `genus_fallback` or `family_fallback`. Every match is verified: NCBI must return the same name, within Collembola. `N/A` if nothing verifies |
 | `ncbi_family`, `family_conflict_bold_ncbi` | Family in NCBI, and `yes` where it differs from the family in BOLD |
 
 ### Traits
@@ -130,7 +130,7 @@ compared.
 | Habitat, either axis | 221 | 149 | **143** | |
 | NCBI taxid, species level (verified) | | | **233** | |
 | NCBI taxid, genus fallback (verified) | | | **89** | |
-| NCBI taxid unresolved | | | 8 | |
+| NCBI taxid, family fallback (verified) | | | **8** | |
 
 The primary counts are lower because the reviewers rejected 68% of v2 trophic guilds and
 56% of v2 body sizes. Fewer values, each one defensible, with the rejected evidence still
@@ -185,8 +185,8 @@ alone can never match a different organism sharing it (*polaris* → the stonefl
 added as a ranking boost. A generative SIBiLS QA answer (Qwen3-8B) is produced from exactly
 those documents, and claim-level extraction derives the structured values described above.
 NCBI taxids come from E-utilities, searched on the exact scientific name. A hit is accepted
-only if NCBI returns that same name within Collembola; otherwise the genus is tried under
-the same check, and failing that the taxid is left blank. Until October 2026 the first hit
+only if NCBI returns that same name within Collembola; otherwise the genus, then the family
+recorded in BOLD, is tried under the same check; if nothing verifies the taxid is `N/A`. Until October 2026 the first hit
 of a bare search was accepted, and for species absent from NCBI, NCBI matches single words
 instead: ten species received the taxid of an unrelated organism sharing the epithet
 (*Halisotoma arenicola* → the lugworm *Arenicola*, *Tetracanthella brachyura* → the crabs,
