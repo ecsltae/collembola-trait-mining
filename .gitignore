@@ -13,3 +13,6 @@ results/checkpoints_*/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# NCBI lookup cache, regenerable
+results/taxid_cache_verified.json

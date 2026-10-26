@@ -143,20 +143,37 @@ def extract_habitat(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def resolve_taxid(name: str, cache: dict, delay: float = 0.34) -> dict:
-    """Resolve an NCBI Taxonomy ID. Falls back to genus if species not found.
+    """Resolve an NCBI Taxonomy ID, verified; falls back to the genus, also verified.
+
+    Searches on the exact scientific name and accepts a hit only if NCBI returns that same
+    name in the springtails division. The earlier version took the first id from a bare
+    search; for a species absent from NCBI, NCBI matches individual words instead, so
+    "Halisotoma arenicola" came back as the lugworm genus Arenicola and was recorded as a
+    species-level match. See scripts/resolve_taxids.py for the batch re-resolution.
     Returns {'taxid': str, 'matched_rank': 'species'|'genus'|'', 'matched_name': str}."""
     if name in cache:
         return cache[name]
+    eutils = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
     result = {"taxid": "", "matched_rank": "", "matched_name": ""}
     for query, rank in [(name, "species"), (name.split()[0], "genus")]:
         try:
-            r = requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-                             params={"db": "taxonomy", "term": query, "retmode": "json"},
-                             timeout=15)
+            r = requests.get(f"{eutils}/esearch.fcgi", timeout=15, params={
+                "db": "taxonomy", "term": f'"{query}"[Scientific Name]', "retmode": "json"})
             ids = r.json().get("esearchresult", {}).get("idlist", [])
             time.sleep(delay)  # NCBI: <=3 req/s without an API key
-            if ids:
-                result = {"taxid": ids[0], "matched_rank": rank, "matched_name": query}
+            if not ids:
+                continue
+            s = requests.get(f"{eutils}/esummary.fcgi", timeout=15, params={
+                "db": "taxonomy", "id": ",".join(ids), "retmode": "json"}).json()["result"]
+            time.sleep(delay)
+            for tid in s.get("uids", []):
+                rec = s[tid]
+                if rec.get("scientificname", "").lower() == query.lower() \
+                        and rec.get("division") == "springtails":
+                    result = {"taxid": tid, "matched_rank": rank,
+                              "matched_name": rec["scientificname"]}
+                    break
+            if result["taxid"]:
                 break
         except Exception as exc:
             print(f"  [WARN] NCBI taxid lookup failed for '{query}': {exc}", file=sys.stderr)

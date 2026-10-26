@@ -76,6 +76,8 @@ the extraction module of the same version.
 | `species`, `genus`, `family` | Taxonomy as recorded in BOLD |
 | `ncbi_taxid` | NCBI Taxonomy ID |
 | `taxid_matched_rank` | `species` = exact match · `genus` = species absent from NCBI, genus ID used · empty = unresolved |
+| `taxid_status` | `species`, `genus_fallback` or `unresolved`. Every match is verified: NCBI must return the same name, within Collembola |
+| `ncbi_family`, `family_conflict_bold_ncbi` | Family in NCBI, and `yes` where it differs from the family in BOLD |
 
 ### Traits
 
@@ -126,7 +128,9 @@ compared.
 | Habitat, EUNIS macrohabitat | | | **106** | 76 |
 | Habitat, microhabitat | | | **106** | 43 |
 | Habitat, either axis | 221 | 149 | **143** | |
-| NCBI taxid resolved | 323 | 323 | 323 | |
+| NCBI taxid, species level (verified) | | | **233** | |
+| NCBI taxid, genus fallback (verified) | | | **89** | |
+| NCBI taxid unresolved | | | 8 | |
 
 The primary counts are lower because the reviewers rejected 68% of v2 trophic guilds and
 56% of v2 body sizes. Fewer values, each one defensible, with the rejected evidence still
@@ -180,8 +184,14 @@ alone can never match a different organism sharing it (*polaris* → the stonefl
 *Arcynopteryx polaris*; *gibbosa* → the snail *Chilina gibbosa*). Trait-relevant terms are
 added as a ranking boost. A generative SIBiLS QA answer (Qwen3-8B) is produced from exactly
 those documents, and claim-level extraction derives the structured values described above.
-NCBI taxids come from E-utilities `esearch`, falling back to the genus ID when the species
-name is absent from NCBI Taxonomy.
+NCBI taxids come from E-utilities, searched on the exact scientific name. A hit is accepted
+only if NCBI returns that same name within Collembola; otherwise the genus is tried under
+the same check, and failing that the taxid is left blank. Until October 2026 the first hit
+of a bare search was accepted, and for species absent from NCBI, NCBI matches single words
+instead: ten species received the taxid of an unrelated organism sharing the epithet
+(*Halisotoma arenicola* → the lugworm *Arenicola*, *Tetracanthella brachyura* → the crabs,
+Brachyura). Bachir Balech identified these. The taxid was never used for retrieval, which is
+keyed on the binomial, so no trait value was affected.
 
 If no document mentions the full binomial, the trait is left blank. No information from a
 different taxon is ever assigned to a species.
@@ -202,8 +212,11 @@ Read the QA answer and follow the source IDs before relying on any value.
   could mine far more completely.
 - **Habitat is multi-label and keyword-derived.** Categories resting only on a general term
   ("coastal", "marine") rather than an ecological descriptor are routed to `habitat_indirect`.
-- **NCBI taxid** uses `esearch`; `taxid_matched_rank = genus` means the species name was not
-  found, and NCBI synonyms can map two names to one ID.
+- **NCBI taxid**: `genus_fallback` means the species name is not in NCBI Taxonomy, and
+  spelling variants fall back too (*Willowsia buski* vs NCBI *W. buskii*). 25 of the 26
+  BOLD/NCBI family conflicts are one systematic disagreement: BOLD follows the newer
+  classification that raises Lepidocyrtidae, Orchesellidae and Seiridae to family rank,
+  while NCBI keeps them within Entomobryidae.
 
 ## Provenance
 
