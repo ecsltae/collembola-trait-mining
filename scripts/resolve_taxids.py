@@ -8,9 +8,12 @@ returned the crab infraorder Brachyura, and the resolver recorded each as an exa
 match. Bachir Balech found ten such cases in October 2026.
 
 Every candidate is now fetched and checked: its scientific name must equal the name asked
-for, and its lineage must contain Collembola. A species that fails falls back to its genus,
-then to its family as recorded in BOLD, each under the same two checks. Anything still
-unverified gets "N/A" rather than a wrong organism.
+for, and its lineage must contain Collembola. A species not found under its BOLD name is then
+looked up under its synonyms, following the name reconciliation of milestone M10.1: first the
+synonyms NCBI itself records, then the accepted name and homotypic synonyms in the Catalogue
+of Life (heterotypic synonyms are not used: CoL files misidentifications among them),
+each held to the same checks. Only then does it fall back to its genus, and to its family as
+recorded in BOLD. Anything still unverified gets "N/A" rather than a wrong organism.
 
 The output also carries the NCBI family, compared against the family recorded in BOLD, so
 taxa whose placement differs between the two backbones are flagged rather than silently
@@ -29,12 +32,13 @@ from pathlib import Path
 import requests
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+COL = "https://api.checklistbank.org/dataset/3LR"   # latest Catalogue of Life release
 DELAY = 0.34  # NCBI: at most 3 requests per second without an API key
 
 
-def esearch_exact(name: str) -> list[str]:
+def esearch_exact(name: str, field: str = "Scientific Name") -> list[str]:
     r = requests.get(f"{EUTILS}/esearch.fcgi", timeout=20, params={
-        "db": "taxonomy", "term": f'"{name}"[Scientific Name]', "retmode": "json"})
+        "db": "taxonomy", "term": f'"{name}"[{field}]', "retmode": "json"})
     time.sleep(DELAY)
     return r.json().get("esearchresult", {}).get("idlist", [])
 
@@ -54,10 +58,51 @@ def efetch(ids: list[str]) -> dict[str, dict]:
             for t in taxon.findall("LineageEx/Taxon"):
                 if t.findtext("Rank") == "family":
                     family = t.findtext("ScientificName") or ""
+            others = {e.text.strip().lower() for e in taxon.findall("OtherNames/*")
+                      if e.text and e.text.strip()}
+            others |= {e.text.strip().lower() for e in taxon.findall("OtherNames/Name/DispName")
+                       if e.text}
             out[tid] = {"name": taxon.findtext("ScientificName") or "",
                         "rank": taxon.findtext("Rank") or "",
-                        "lineage": lineage, "family": family}
+                        "lineage": lineage, "family": family, "other_names": others}
     return out
+
+
+def col_names(name: str) -> list[str]:
+    """Accepted name and homotypic synonyms of `name` in the Catalogue of Life (binomials)."""
+    try:
+        m = requests.get(f"{COL}/match/nameusage", params={"q": name}, timeout=30).json()
+        u = m.get("usage") or {}
+        acc = u.get("accepted") if isinstance(u.get("accepted"), dict) else None
+        out = [acc["name"]] if acc and acc.get("name") else []
+        tid = (acc or u).get("id")
+        if tid:
+            # Homotypic synonyms only (same type specimen: genus transfers, spelling
+            # variants). CoL also files misidentifications as heterotypic synonyms, with
+            # the misidentifying author attached: "Orchesella villosa Ionesco, 1915" is
+            # Ionesco's misapplication of the name to O. multifasciata, not the valid
+            # O. villosa (Geoffroy, 1762) that NCBI holds. Following heterotypic synonyms
+            # assigned eleven species the taxid of a different valid species.
+            syn = requests.get(f"{COL}/taxon/{tid}/synonyms", timeout=30).json()
+            for x in syn.get("homotypic", []) or []:
+                if x.get("status") != "synonym":
+                    continue
+                nm = x.get("name")
+                out.append(nm.get("scientificName") if isinstance(nm, dict) else nm)
+    except Exception as exc:
+        print(f"  [WARN] CoL lookup failed for {name}: {exc}")
+        return []
+    seen, keep = {name.lower()}, []
+    for n in out:
+        if n and len(n.split()) == 2 and n.lower() not in seen:
+            seen.add(n.lower())
+            keep.append(n)
+    return keep
+
+
+def verified_species(tid: str, info: dict) -> bool:
+    rec = info.get(tid)
+    return bool(rec) and rec["rank"] == "species" and "Collembola" in rec["lineage"]
 
 
 def verified(tid: str, expected_name: str, info: dict) -> bool:
@@ -99,9 +144,33 @@ def main() -> None:
                     cache[q] = None
         cache_path.write_text(json.dumps(cache))
 
-    # 2. fetch every candidate once, then verify
-    cand = sorted({t for ids in cache.values() if ids for t in ids})
+    # 2. fetch every candidate once
+    cand = sorted({t for k, ids in cache.items() if ids and not k.startswith("col:") for t in ids})
     info = efetch(cand)
+
+    # 3. species not verified under their BOLD name: try their synonyms
+    syn_lookups: dict[str, list[tuple[str, str, list[str]]]] = {}
+    for r in species:
+        sp = r["species"]
+        if any(verified(t, sp, info) for t in (cache.get(sp) or [])):
+            continue
+        tries = []
+        key = f"all:{sp}"                         # NCBI's own synonym records
+        if key not in cache:
+            cache[key] = esearch_exact(sp, "All Names")
+        tries.append(("NCBI", sp, cache[key]))
+        ckey = f"col:{sp}"                        # Catalogue of Life accepted name + synonyms
+        if ckey not in cache:
+            cache[ckey] = col_names(sp)
+        for alt in cache[ckey]:
+            if alt not in cache:
+                cache[alt] = esearch_exact(alt)
+            tries.append(("CoL", alt, cache[alt]))
+        syn_lookups[sp] = tries
+        cache_path.write_text(json.dumps(cache))
+    extra = sorted({t for tries in syn_lookups.values() for _, _, ids in tries for t in ids or []}
+                   - set(info))
+    info.update(efetch(extra))
 
     rows = []
     for r in species:
@@ -111,8 +180,20 @@ def main() -> None:
         sp_ok = [t for t in (cache.get(sp) or []) if verified(t, sp, info)]
         g_ok = [t for t in (cache.get(genus) or []) if verified(t, genus, info)]
         f_ok = [t for t in (cache.get(fam) or []) if fam and verified(t, fam, info)]
+        syn_hit = None
+        for src, alt, ids in syn_lookups.get(sp, []):
+            for t in ids or []:
+                rec = info.get(t, {})
+                if src == "NCBI" and verified_species(t, info) and sp.lower() in rec.get("other_names", set()):
+                    syn_hit = (t, src, rec["name"]); break
+                if src == "CoL" and verified_species(t, info) and rec.get("name", "").lower() == alt.lower():
+                    syn_hit = (t, src, rec["name"]); break
+            if syn_hit:
+                break
         if sp_ok:
             tid, rank, status = sp_ok[0], "species", "species"
+        elif syn_hit:
+            tid, rank, status = syn_hit[0], "species", "species_via_synonym"
         elif g_ok:
             tid, rank, status = g_ok[0], "genus", "genus_fallback"
         elif f_ok:
@@ -126,6 +207,7 @@ def main() -> None:
             "taxid_matched_rank": rank or "N/A",
             "taxid_status": status,
             "ncbi_scientific_name": info.get(tid, {}).get("name", "") if tid else "",
+            "synonym_source": syn_hit[1] if (syn_hit and status == "species_via_synonym") else "",
             "ncbi_family": ncbi_fam,
             "bold_family": bfam,
             "family_conflict_bold_ncbi": "yes" if conflict else "",
@@ -144,6 +226,7 @@ def main() -> None:
     changed = [x for x in rows if x["ncbi_taxid"] not in (x["previous_taxid"], "N/A")]
     print(f"{len(rows)} species -> {args.output}")
     print(f"  species-level, verified : {st['species']}")
+    print(f"  species via synonym     : {st['species_via_synonym']}")
     print(f"  genus fallback, verified: {st['genus_fallback']}")
     print(f"  family fallback, verified: {st['family_fallback']}")
     print(f"  unresolved              : {st['unresolved']}")
