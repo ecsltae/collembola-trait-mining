@@ -223,6 +223,21 @@ _DIET_VERB = _any([
 ])
 
 
+# Level-1 trophic guilds of Potapov et al. (2016, 2022), as used in Table 1 of D10.1.
+# The fine labels extracted above are its subcategories. "omnivore" has no Potapov
+# equivalent and is left out of the level-1 column (it stays in the fine-label column).
+POTAPOV_GUILD = {
+    "herbivore": "Herbivores", "algivore": "Herbivores",
+    "fungivore": "Microbivores", "bacterivore": "Microbivores", "microbivore": "Microbivores",
+    "detritivore": "Detritivores",
+    "predator": "Carnivores",
+}
+
+
+def to_potapov(labels: list[str]) -> list[str]:
+    return list(dict.fromkeys(POTAPOV_GUILD[l] for l in labels if l in POTAPOV_GUILD))
+
+
 def _guilds_in(text: str) -> list[str]:
     scores = {g: sum(1 for p in pats if p.search(text)) for g, pats in _GUILD_PAT.items()}
     return sorted([g for g, s in scores.items() if s > 0], key=lambda g: -scores[g])

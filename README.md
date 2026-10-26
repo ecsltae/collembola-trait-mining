@@ -92,8 +92,11 @@ Each of the three traits carries the same six columns.
 | `*_n_docs` | Species-specific documents behind the answer (0 = no species-specific evidence) |
 | `*_sources`, `*_qa_answer` | Source document IDs (PMID / PMCID / Plazi) and the grounded QA answer |
 
-Trophic guilds follow Potapov et al. 2022 (*Soil Biology & Biochemistry*): fungivore,
-bacterivore, microbivore, algivore, herbivore, detritivore, predator, omnivore.
+Trophic guilds follow Potapov et al. (2016, 2022). `trophic_guild_potapov` gives the level-1
+guild used in the project vocabulary: Herbivores, Detritivores, Microbivores, Carnivores.
+`trophic_guild` keeps the subcategory: herbivore and algivore (Herbivores), fungivore,
+bacterivore and microbivore (Microbivores), detritivore, predator (Carnivores). One indirect
+"omnivore" has no Potapov equivalent and appears only in the subcategory column.
 
 **`habitat_eunis`** uses EUNIS level 1, 2012 letter codes: A Marine · B Coastal · C Inland
 surface waters · D Mires, bogs and fens · E Grasslands · F Heathland, scrub and tundra ·

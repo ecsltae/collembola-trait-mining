@@ -17,12 +17,15 @@ from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from trait_extraction_v4 import extract_body_size, extract_habitat, extract_trophic  # noqa: E402
+from trait_extraction_v4 import extract_body_size, extract_habitat, extract_trophic, to_potapov  # noqa: E402
 
 FIELDS = [
     "species", "genus", "family", "ncbi_taxid", "taxid_matched_rank",
+    "taxid_status", "ncbi_family", "family_conflict_bold_ncbi",
     # trophic guild
-    "trophic_guild", "trophic_guild_indirect", "trophic_evidence_type", "trophic_note",
+    "trophic_guild", "trophic_guild_indirect",
+    "trophic_guild_potapov", "trophic_guild_potapov_indirect",
+    "trophic_evidence_type", "trophic_note",
     "trophic_n_docs", "trophic_sources", "trophic_qa_answer",
     # body size
     "body_size_mm", "body_size_indirect_mm", "body_size_note",
@@ -89,9 +92,14 @@ def main() -> None:
     ap.add_argument("--checkpoints", default="results/checkpoints_species_v2")
     ap.add_argument("--bold", default="data/bold_collembola_180226.csv")
     ap.add_argument("--output", default="collembola_species_traits_v4.csv")
+    ap.add_argument("--taxids", default="taxids_verified.csv",
+                    help="verified taxids from resolve_taxids.py; the checkpoints hold the "
+                         "old unverified ones")
     args = ap.parse_args()
 
     bold = load_bold(args.bold)
+    verified_tax = ({r["species"]: r for r in csv.DictReader(open(args.taxids))}
+                    if Path(args.taxids).exists() else {})
     rows = []
 
     for path in sorted(Path(args.checkpoints).glob("*.json")):
@@ -112,6 +120,9 @@ def main() -> None:
 
             "trophic_guild": "|".join(t["guilds"]),
             "trophic_guild_indirect": "|".join(t["guilds_indirect"]),
+            "trophic_guild_potapov": "|".join(to_potapov(t["guilds"])),
+            "trophic_guild_potapov_indirect": "|".join(
+                g for g in to_potapov(t["guilds_indirect"]) if g not in to_potapov(t["guilds"])),
             "trophic_evidence_type": t["evidence_type"], "trophic_note": t["note"],
             "trophic_n_docs": tro.get("n_docs", 0), "trophic_sources": tro.get("source_docids", ""),
             "trophic_qa_answer": tro.get("answer", ""),
@@ -129,6 +140,11 @@ def main() -> None:
             "habitat_n_docs": hab.get("n_docs", 0), "habitat_sources": hab.get("source_docids", ""),
             "habitat_qa_answer": hab.get("answer", ""),
         }
+        vt = verified_tax.get(sp)
+        if vt:
+            for k in ("ncbi_taxid", "taxid_matched_rank", "taxid_status",
+                      "ncbi_family", "family_conflict_bold_ncbi"):
+                row[k] = vt[k]
         row.update({k: "" for k in FIELDS if k.startswith("bold_")})
         row.update(bold.get(sp, {}))
         rows.append(row)
