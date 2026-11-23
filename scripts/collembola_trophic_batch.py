@@ -59,9 +59,12 @@ GUILD_KEYWORDS: dict[str, list[str]] = {
         "moss", "lichen", "liverwort", "bryophyte", "epiphyte",
         "plant tissue", "vascular plant",
     ],
+    # "collembola", "mite" and "arthropod" removed (D10.3 action P16): an answer about a
+    # springtail genus names springtails and mites constantly without any of them being food,
+    # and that alone added an unstated predator guild to 5 of 21 genus answers.
     "predator": [
-        "prey", "predat", "hunt", "capture", "nematode", "mite", "collembola",
-        "arthropod", "protozoa", "tardigrade", "enchytraeid", "parasite",
+        "prey", "predat", "hunt", "capture", "nematode", "protozoa", "tardigrade",
+        "enchytraeid", "parasite",
     ],
     "detritivore": [
         "detritus", "decompos", "organic matter", "litter", "humus",
@@ -81,15 +84,24 @@ _COMPILED: dict[str, list[re.Pattern]] = {
 
 def infer_guilds(texts: list[str]) -> list[str]:
     """
-    Score each guild against a list of text fragments.
+    Score each guild against a list of text fragments, sentence by sentence.
+
+    Sentences saying the diet is not stated are skipped, and a sentence in which the taxon is
+    the prey ("preyed upon by", "a food source for spiders") cannot contribute the predator
+    guild (D10.3 action P16, as the species extractor already does).
     Returns guilds with ≥1 keyword hit, sorted by hit count descending.
     If nothing matches, returns ["unknown"].
     """
+    from trait_extraction_v5 import PREY_OF, is_denial, sentences
     scores: dict[str, int] = {g: 0 for g in GUILD_KEYWORDS}
-    combined = " ".join(texts).lower()
-    for guild, patterns in _COMPILED.items():
-        for pat in patterns:
-            if pat.search(combined):
+    for sent in sentences(" ".join(t for t in texts if t)):
+        if is_denial(sent, scope_aware=True):
+            continue
+        low = sent.lower()
+        for guild, patterns in _COMPILED.items():
+            if guild == "predator" and PREY_OF.search(sent):
+                continue
+            if any(pat.search(low) for pat in patterns):
                 scores[guild] += 1
     matched = [g for g, s in scores.items() if s > 0]
     matched.sort(key=lambda g: -scores[g])
