@@ -135,7 +135,7 @@ def score(gold_path: str, version: str, ck_dir: Path, verbose: bool) -> tuple[in
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--version", default="v4", choices=["v3", "v4"])
+    ap.add_argument("--version", default="v4", choices=["v3", "v4", "v5"])
     ap.add_argument("--gold", nargs="+",
                     default=["review_adjudication_2026-09.csv", "review_adjudication_2026-10_v3.csv"])
     ap.add_argument("--checkpoints", default="results/checkpoints_species_v2")
