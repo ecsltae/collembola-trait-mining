@@ -4,7 +4,7 @@ Species-level trait mining for Collembola via SIBILS QA.
 
 For each identified species (binomial) in the BOLD dataset, this script:
   1. Resolves the NCBI Taxonomy ID (so collaborators can check the taxonomic path)
-  2. Asks SIBILS QA three questions (generative):
+  2. Asks SIBILS QA three questions (generative for diet and habitat, extractive for size):
        - trophic guild : "What does {species} feed on?"
        - body size     : "What is the body length of {species}?"
        - habitat       : "What is the habitat of {species}?"
@@ -36,6 +36,9 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+
+sys.path.insert(0, str(Path(__file__).parent))
+import trait_extraction_v5 as tx  # noqa: E402  (answer selection, D10.3 P18/P22)
 
 
 # ---------------------------------------------------------------------------
@@ -200,11 +203,19 @@ TRAIT_TERMS = {
     "size":    "body length size mm millimetre measurement",
     "habitat": "habitat soil litter moss cave forest inhabits found lives",
 }
+# PMC is searched in the full text too (D10.3 action P20): a species is often named only in
+# the body of a paper, and with title/abstract/keywords alone the gold diet document reached
+# the reader for 40 % of species questions. The boosts keep a paper about the species ahead
+# of one that only lists it.
 COL_FIELDS = {
     "medline": ["title", "abstract", "keywords"],
-    "pmc":     ["title", "abstract", "keywords"],
+    "pmc":     ["title^3", "abstract^2", "keywords^2", "full_text"],
     "plazi":   ["treatment_title", "text", "title"],
 }
+# Reader per trait (D10.3 action P22). On the pipeline's documents the extractive reader
+# found the body size with 100 % precision and 62 % recall, against 38 % for the stored
+# generative answer; for diet and habitat the generative reader is better.
+QA_MODE = {"trophic": "generative", "size": "extractive", "habitat": "generative"}
 
 
 def phrase_search_ids(binomial: str, trait_key: str, n: int = 6) -> list[str]:
@@ -227,30 +238,76 @@ def phrase_search_ids(binomial: str, trait_key: str, n: int = 6) -> list[str]:
     return list(dict.fromkeys(ids))  # dedup, preserve order
 
 
-def query_qa_docrefs(question: str, ids: list[str], api_url: str, timeout: int = 150) -> dict:
-    """Run generative QA on exactly the given document IDs (skips retrieval)."""
+def collection_answers(data: dict) -> list[dict]:
+    """Every answer of every collection, in the order the service returned them."""
+    out = []
+    for cr in data.get("collection_results") or []:
+        for i, a in enumerate(cr.get("answers") or []):
+            if not a.get("answer"):
+                continue
+            out.append({
+                "collection": cr.get("collection") or "",
+                "rank_in_collection": i,
+                "answer": a["answer"],
+                "score": a.get("answer_score"),
+                "docids": [f"{d['docid']}({d.get('doc_source', '')})"
+                           for d in a.get("docs") or [] if d.get("docid")],
+            })
+    return out
+
+
+def choose_answer(trait_key: str, cands: list[dict], species: str) -> Optional[dict]:
+    """The answer the trait is read from (D10.3 actions P18 and P22).
+
+    v4 kept the first non-empty answer in collection order, so a Medline "not stated"
+    displaced the value a Plazi treatment gave. Now:
+      size (extractive)    the highest-scoring span from which a body size can be read.
+                           The top span of a collection is often a seta formula
+                           ("3,2,1,1,1") or a locality.
+      diet, habitat        the first collection's answer that does not deny the trait,
+                           else the first answer.
+    Simulated on the D10.3 pipeline runs: stored value correct 48 -> 81 of 122 traits,
+    species diets 40 -> 44 of 81, false values on undocumented traits 0 -> 1 of 60.
+    """
+    if not cands:
+        return None
+    if trait_key == "size":
+        sized = [c for c in cands if tx.extract_body_size(c["answer"], species)["range_mm"]]
+        return max(sized, key=lambda c: c["score"] or 0.0) if sized else None
+    tops = [c for c in cands if c["rank_in_collection"] == 0]
+    for c in tops:
+        if not tx.answer_denies(c["answer"], scope_aware=(trait_key == "trophic")):
+            return c
+    return tops[0] if tops else cands[0]
+
+
+def query_qa_docrefs(question: str, ids: list[str], api_url: str, trait_key: str = "trophic",
+                     species: str = "", timeout: int = 150) -> dict:
+    """Run QA on exactly the given document IDs (skips retrieval)."""
     if not ids:
-        return {"answer": "", "source_docids": "", "n_docs": 0, "n_ontarget": 0}
+        return {"answer": "", "source_docids": "", "n_docs": 0, "n_ontarget": 0,
+                "mode": QA_MODE[trait_key], "answers_by_collection": []}
+    mode = QA_MODE[trait_key]
     try:
         resp = requests.post(f"{api_url.rstrip('/')}/qa", timeout=timeout,
-                             json={"question": question, "mode": "generative", "doc_refs": ids})
+                             json={"question": question, "mode": mode, "doc_refs": ids})
         resp.raise_for_status()
         data = resp.json()
     except Exception as exc:
         print(f"  [ERROR] QA failed: {question!r}: {exc}", file=sys.stderr)
-        return {"answer": "", "source_docids": "", "n_docs": 0, "n_ontarget": len(ids)}
+        return {"answer": "", "source_docids": "", "n_docs": 0, "n_ontarget": len(ids),
+                "mode": mode, "answers_by_collection": [], "error": str(exc)}
 
-    best, docids = "", []
-    for cr in data.get("collection_results") or []:
-        answers = cr.get("answers") or []
-        if answers and answers[0].get("answer") and not best:
-            best = answers[0]["answer"]
-        for a in answers:
-            for d in a.get("docs") or []:
-                if d.get("docid"):
-                    docids.append(f"{d['docid']}({d.get('doc_source','')})")
-    return {"answer": best, "source_docids": "|".join(dict.fromkeys(docids)),
-            "n_docs": data.get("ndocs_retrieved") or 0, "n_ontarget": len(ids)}
+    cands = collection_answers(data)
+    best = choose_answer(trait_key, cands, species)
+    docids = [d for c in cands for d in c["docids"]]
+    return {"answer": best["answer"] if best else "",
+            "answer_collection": best["collection"] if best else "",
+            "answer_score": best["score"] if best else None,
+            "source_docids": "|".join(dict.fromkeys(docids)),
+            "n_docs": data.get("ndocs_retrieved") or 0, "n_ontarget": len(ids),
+            "mode": mode, "answers_by_collection": cands,
+            "error": data.get("error") or ""}
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +344,7 @@ def main() -> None:
     ap.add_argument("--csv", default="data/bold_collembola_180226.csv")
     ap.add_argument("--api", default="https://qa.dev.sibils.org/api")
     ap.add_argument("--output", default="results/collembola_species_traits.csv")
-    ap.add_argument("--checkpoint-dir", default="results/checkpoints_species_v2")
+    ap.add_argument("--checkpoint-dir", default="results/checkpoints_species_v3")
     ap.add_argument("--taxid-cache", default="")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--delay", type=float, default=0.4)
@@ -326,7 +383,7 @@ def main() -> None:
         taxid_cache_path.write_text(json.dumps(taxid_cache))
         for key, tmpl in QUESTIONS.items():
             ids = phrase_search_ids(sp, key)
-            rec[key] = query_qa_docrefs(tmpl.format(sp=sp), ids, args.api)
+            rec[key] = query_qa_docrefs(tmpl.format(sp=sp), ids, args.api, key, sp)
             time.sleep(args.delay)
         ckpt.write_text(json.dumps(rec))
         ont = "/".join(str(rec[k]["n_ontarget"]) for k in QUESTIONS)
