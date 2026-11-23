@@ -216,6 +216,11 @@ COL_FIELDS = {
 # found the body size with 100 % precision and 62 % recall, against 38 % for the stored
 # generative answer; for diet and habitat the generative reader is better.
 QA_MODE = {"trophic": "generative", "size": "extractive", "habitat": "generative"}
+# Extractive spans below this score are not read as a body size. On the 60 D10.3 gold
+# treatments every correct size scored >= 0.0115 with the November reader; the wrong span
+# kept without it scored 0.0008, and the one size read from a treatment that states none,
+# 0.001.
+MIN_SIZE_SCORE = 0.005
 
 
 def phrase_search_ids(binomial: str, trait_key: str, n: int = 6) -> list[str]:
@@ -272,7 +277,8 @@ def choose_answer(trait_key: str, cands: list[dict], species: str) -> Optional[d
     if not cands:
         return None
     if trait_key == "size":
-        sized = [c for c in cands if tx.extract_body_size(c["answer"], species)["range_mm"]]
+        sized = [c for c in cands if (c["score"] or 0.0) >= MIN_SIZE_SCORE
+                 and tx.extract_body_size(c["answer"], species)["range_mm"]]
         return max(sized, key=lambda c: c["score"] or 0.0) if sized else None
     tops = [c for c in cands if c["rank_in_collection"] == 0]
     for c in tops:
